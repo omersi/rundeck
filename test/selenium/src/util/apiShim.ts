@@ -14,7 +14,13 @@ export function ShimApiTests(pattern: RegExp) {
 
     tests.forEach(t => {
         it(t, () => {
-            const out = CP.execSync(`RDECK_URL=${envOpts.RUNDECK_URL} bash ./${t} -`, {cwd: '../api'})
+            try {
+                const out = CP.execSync(`RDECK_URL=${envOpts.RUNDECK_URL} bash ./${t} -`, {cwd: '../api'})
+            } catch (e) {
+                const ex = e as Error
+                ex.message = `${e.stdout.toString()}\n${e.message}`
+                throw e
+            }
         })
     })
 }

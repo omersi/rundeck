@@ -68,7 +68,9 @@ class ApiCommand {
         if (opts.debug)
             args = `node --inspect-brk ./node_modules/.bin/jest --runInBand --testPathPattern="__tests__\/api\/" ${opts.jest}`
         else
-            args = `node ./node_modules/.bin/jest --testPathPattern="__tests__\/api\/${opts.testPath}" ${opts.jest}`
+            args = `node ./node_modules/.bin/jest --testPathPattern="__tests__\/api\/${opts.testPath || ''}" ${opts.jest}`
+
+        console.log(opts)
 
         const client = new Rundeck(new PasswordCredentialProvider(opts.url, 'admin', 'admin'), {baseUri: opts.url})
 
@@ -79,10 +81,12 @@ class ApiCommand {
         const testProjectPrefixes = ['project-', 'APITest', 'scheduler-', 'testscm']
 
         const testProjects = projects.filter(project => {
-            testProjectPrefixes.some(prefix => {
+            return testProjectPrefixes.some(prefix => {
                 return project.name.startsWith(prefix)
             })
         })
+
+        console.log(testProjects)
 
         const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
 
@@ -113,6 +117,7 @@ async function waitForRundeckReady(client: Rundeck, timeout = 120000) {
             await client.systemInfoGet()
             return
         } catch  (e) {
+            console.log(e)
             await sleep(5000)
         }
     }
