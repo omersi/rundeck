@@ -78,7 +78,7 @@ class ApiCommand {
 
         const projects = await client.projectList()
 
-        const testProjectPrefixes = ['project-', 'APITest', 'scheduler-', 'testscm']
+        const testProjectPrefixes = ['project-', 'API', 'APITest', 'scheduler-', 'testscm']
 
         const testProjects = projects.filter(project => {
             return testProjectPrefixes.some(prefix => {

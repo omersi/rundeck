@@ -19,7 +19,7 @@
     "@types/jest-image-snapshot": "^2.4.0",
     "@types/js-yaml": "^3.11.2",
     "@types/mkdirp": "^0.5.2",
-    "@types/node": "^10.0.8",
+    "@types/node": "^13.9.2",
     "@types/selenium-webdriver": "^4.0.6",
     "@types/tmp": "0.0.33",
     "@types/uuid": "^3.4.6",
@@ -42,7 +42,7 @@
     "ts-rundeck": "^0.1.6",
     "tsconfig-paths": "^3.4.1",
     "tslint": "^5.10.0",
-    "typescript": "^2.8.3",
+    "typescript": "^3.8.3",
     "uuid": "^3.4.0",
     "yargs": "^11.0.0"
   },
