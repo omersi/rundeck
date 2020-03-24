@@ -35,6 +35,9 @@ class ApiCommand {
             .option('testPath', {
                 type: 'string'
             })
+            .option('testNamePattern', {
+                type: 'string'
+            })
             .option("s", {
                 alias: "suite",
                 describe: "Sub suite of selenium tests to run",
@@ -78,7 +81,7 @@ class ApiCommand {
 
         const projects = await client.projectList()
 
-        const testProjectPrefixes = ['project-', 'API', 'APITest', 'scheduler-', 'testscm']
+        const testProjectPrefixes = ['project-', 'API', 'APITest', 'scheduler-', 'testscm', 'test']
 
         const testProjects = projects.filter(project => {
             return testProjectPrefixes.some(prefix => {
@@ -91,6 +94,8 @@ class ApiCommand {
         const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
 
         await Promise.all(cleanupProms)
+
+        await client.projectCreate({name: 'test'})
 
         const importer = new ProjectImporter('./lib', 'SeleniumBasic', client)
         await importer.importProject()

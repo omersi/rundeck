@@ -1,5 +1,5 @@
 import { ShimApiTests } from 'util/apiShim'
 
-describe('API Execution Tests', ()=> {
+describe('Legacy API Execution Tests', ()=> {
     ShimApiTests(/^test-executions?/)
 })
