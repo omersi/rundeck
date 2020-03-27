@@ -4,13 +4,9 @@ import FS from 'fs'
 import {envOpts} from 'test/selenium'
 
 const skipTests = [
-    // 'test-job-flip-scheduleEnabled.sh',
-    'test-job-run-steps.sh',
-    'test-job-run-webhook.sh',
-    'test-job-run-without-deadlock.sh',
-    'test-job-scheduled.sh',
-    'test-jobs-import-jobref-renamed.sh',
-    'test-jobs-import-jobref-validated-false.sh'
+    'test-job-run-steps.sh', // Requires file on Rundeck server(s)
+    'test-job-run-webhook.sh', // Requires NC running
+    'test-job-run-without-deadlock.sh', // Requires inspecting log output
 ]
 
 export function ShimApiTests(pattern: RegExp) {
@@ -23,7 +19,7 @@ export function ShimApiTests(pattern: RegExp) {
     tests = tests.filter(t => pattern.test(t) && t.endsWith('.sh'))
 
     tests.forEach(t => {
-        if(skipTests.indexOf(t) > 0) {
+        if(skipTests.indexOf(t) > -1) {
             it.skip(t, () => {})
             return
         }

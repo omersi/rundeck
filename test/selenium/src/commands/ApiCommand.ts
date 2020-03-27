@@ -91,11 +91,17 @@ class ApiCommand {
 
         console.log(testProjects)
 
-        const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
+        let jobs = await client.jobList('test')
 
-        await Promise.all(cleanupProms)
+        for (let job of jobs) {
+            await client.jobDelete(job.id)
+        }
 
-        await client.projectCreate({name: 'test'})
+        // const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
+
+        // await Promise.all(cleanupProms)
+
+        // await client.projectCreate({name: 'test'})
 
         const importer = new ProjectImporter('./lib', 'SeleniumBasic', client)
         await importer.importProject()
