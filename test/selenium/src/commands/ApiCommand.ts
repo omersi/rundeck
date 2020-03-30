@@ -81,7 +81,7 @@ class ApiCommand {
 
         const projects = await client.projectList()
 
-        const testProjectPrefixes = ['project-', 'API', 'APITest', 'scheduler-', 'testscm', 'test']
+        const testProjectPrefixes = ['project-', 'API', 'APITest', 'scheduler-', 'testscm']
 
         const testProjects = projects.filter(project => {
             return testProjectPrefixes.some(prefix => {
@@ -89,19 +89,22 @@ class ApiCommand {
             })
         })
 
+        if (! testProjects.find(p => p.name == 'test'))
+            await client.projectCreate({name: 'test'})
+
         console.log(testProjects)
 
         let jobs = await client.jobList('test')
 
         for (let job of jobs) {
-            await client.jobDelete(job.id)
+            // await client.jobDelete(job.id)
         }
 
-        // const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
+        const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
 
-        // await Promise.all(cleanupProms)
+        await Promise.all(cleanupProms)
 
-        // await client.projectCreate({name: 'test'})
+        await client.projectCreate({name: 'test'})
 
         const importer = new ProjectImporter('./lib', 'SeleniumBasic', client)
         await importer.importProject()
