@@ -7,18 +7,24 @@ import {DockerCompose} from './DockerCompose'
 import {Readable} from 'stream'
 
 import URL from 'url'
-import { Rundeck } from 'ts-rundeck'
+import { Rundeck, PasswordCredentialProvider } from 'ts-rundeck'
 import { readFile } from 'fs'
 
 const readfileAsync = promisify(FS.readFile)
 
-class RundeckCluster {
+export class RundeckCluster {
     url: URL
 
+    client: Rundeck
+
     nodes: RundeckInstance[]
+
+    constructor(url: string, username: string, password: string) {
+        this.client = new Rundeck(new PasswordCredentialProvider(url, username, password), {baseUri: url})
+    }
 }
 
-class RundeckInstance {
+export class RundeckInstance {
     constructor(readonly base: URL.UrlWithStringQuery)  {}
 
     async readRundeckFile(file: string) {

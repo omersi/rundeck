@@ -1,6 +1,7 @@
 import FS from 'fs'
 import * as Url from 'url'
 import {promisify} from 'util'
+import {RundeckCluster} from './RundeckCluster'
 
 import {S3} from 'aws-sdk'
 
@@ -11,6 +12,7 @@ import {v1} from 'uuid'
 const writeAsync = promisify(FS.writeFile)
 
 export class Context {
+    Rundeck: RundeckCluster
     currentTestName!: string
     s3: S3
     uploadPromises: Promise<{}>[] = []

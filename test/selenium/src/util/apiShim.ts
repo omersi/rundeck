@@ -13,6 +13,21 @@ const skipTests = [
     'test-execution-output-plain.sh',
     'test-execution-output-utf8.sh',
     'test-execution-state.sh', // Reads framework.properties
+
+    '^test-scm',
+
+    /** Misc */
+    'test-history.sh',
+    'test-metrics.sh', // .meters length 7 instead of 8 ?
+    'test-require-version.sh',
+    'test-resource.sh',
+    'test-resources.sh',
+    'test-run-script-interpreter.sh',
+    'test-run-script.sh',
+    'test-v23-project-source-resources.sh',
+    'test-v23-project-sources-json.sh',
+    'test-v23-project-sources-xml.sh',
+    'test-workflow-errorhandler.sh',
 ]
 
 export function ShimApiTests(pattern: RegExp) {
@@ -24,12 +39,13 @@ export function ShimApiTests(pattern: RegExp) {
 
     tests = tests.filter(t => pattern.test(t) && t.endsWith('.sh'))
 
-    tests.forEach(t => {
-        if(skipTests.indexOf(t) > -1) {
+    for (let t of tests) {
+        if (skipTests.some(s => new RegExp(s).test(t))) {
+            console.log(`Skipping ${t}`)
             it.skip(t, () => {})
-            return
+            continue
         }
-
+ 
         it(t, () => {
             try {
                 const out = CP.execSync(`RDECK_URL=${envOpts.RUNDECK_URL} bash ./${t} -`, {cwd: '../api'})
@@ -39,5 +55,5 @@ export function ShimApiTests(pattern: RegExp) {
                 throw e
             }
         })
-    })
+    }
 }

@@ -97,7 +97,7 @@ class ApiCommand {
         let jobs = await client.jobList('test')
 
         for (let job of jobs) {
-            // await client.jobDelete(job.id)
+            await client.jobDelete(job.id)
         }
 
         const cleanupProms = testProjects.map(p => client.projectDelete(p.name))
