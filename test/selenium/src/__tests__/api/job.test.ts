@@ -3,6 +3,7 @@ import {CreateCluster} from 'test/api'
 
 import 'test/rundeck'
 import { sleep } from 'async/util';
+import { create } from 'domain';
 
 // We will initialize and cleanup in the before/after methods
 let cluster: RundeckCluster
@@ -82,6 +83,6 @@ echo "option opt2: \$1"]]></script>
 
 describe('Jobs', () => {
     it('Scooby Doos', async () => {
-        await cluster.client.projectJobsImport('test', Buffer.from(job), {jobImportOptions: {dupeOption: 'update'}})
+        const createREsp = await cluster.client.projectJobsImport('test', Buffer.from(job), {jobImportOptions: {dupeOption: 'update'}})
     })
 })
