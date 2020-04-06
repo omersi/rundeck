@@ -17,15 +17,14 @@ beforeAll( async () => {
 describe('Jobs', () => {
     it('Scooby Doos', async () => {
         /** Load files onto cluster */
-        for (let node of cluster.nodes) {
-            let buffer = await readFile('./lib/job/job-run-steps-test-script1.txt')
-            await node.writeFile('/home/rundeck/job-run-steps-test-script1.txt', buffer)
 
-            buffer = await readFile('./lib/job/job-run-steps-test-script2.txt')
-            await node.writeFile('/home/rundeck/job-run-steps-test-script2.txt', buffer)
-        }
+        const SCRIPT_FILE1='job-run-steps-test-script1.txt'
+
+        let buffer = await readFile(`./lib/job/${SCRIPT_FILE1}`)
+        await cluster.writeRundeckFile(SCRIPT_FILE1, buffer)
 
         /** Import job definition */
+        const job = createJob(cluster)
         const createREsp = await cluster.client.projectJobsImport('test', Buffer.from(job), {jobImportOptions: {dupeOption: 'update'}})
         const body = (await readStream(createREsp.readableStreamBody)).toString()
         const obj = parse(body, {ignoreAttributes: false, attributeNamePrefix: '$_'})
@@ -53,19 +52,18 @@ describe('Jobs', () => {
     })
 })
 
+function createJob(cluster: RundeckCluster) {
+    const command = 'echo hello there'
 
-const command = 'echo hello there'
+    const SCRIPT_FILE_1=`${cluster.nodes[0].base.path}/job-run-steps-test-script1.txt`
 
-const SCRIPT_FILE_1='/home/rundeck/job-run-steps-test-script1.txt'
-const SCRIPT_FILE_2='/home/rundeck/job-run-steps-test-script2.txt'
-
-const DOS_LINE_SCRIPT=`\
+    const DOS_LINE_SCRIPT=`\
 #!/bin/bash
 
 echo "this is script 2, opt1 is $RD_OPTION_OPT1"
 `
 
-const job = `
+    return `
 <joblist>
    <job>
       <name>test job</name>
@@ -133,3 +131,4 @@ echo "option opt2: \$1"]]></script>
    </job>
 </joblist>
 `
+}

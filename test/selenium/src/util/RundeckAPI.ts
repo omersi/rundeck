@@ -25,14 +25,17 @@ const STATUS_FINAL = [
 ]
 
 export async function waitForExecutionComplete(client: Rundeck, id: number) {
-    let curStatus = Status.Running
-
     let resp: ExecutionStatusGetResponse
-    
-    while(! STATUS_FINAL.includes(curStatus) ) {
-        resp = await client.executionStatusGet(id.toString())
 
+    let curStatus = Status.Running
+    while(true) {
+        resp = await client.executionStatusGet(id.toString())
         curStatus = resp.status
+
+        if (STATUS_FINAL.includes(curStatus))
+            break
+        else
+            await sleep(1000)
     }
 
     return resp

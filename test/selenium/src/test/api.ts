@@ -16,8 +16,8 @@ export async function CreateCluster() {
     const cluster = new RundeckCluster(envOpts.RUNDECK_URL!, 'admin', 'admin')
 
     cluster.nodes = [
-        new RundeckInstance(parse('docker://cluster_rundeck-1_1')),
-        new RundeckInstance(parse('docker://cluster_rundeck-2_1')),
+        new RundeckInstance(parse('docker://cluster_rundeck-1_1/home/rundeck')),
+        new RundeckInstance(parse('docker://cluster_rundeck-2_1/home/rundeck')),
     ]
 
     return cluster

@@ -18,6 +18,20 @@ export class RundeckCluster {
     constructor(url: string, username: string, password: string) {
         this.client = new Rundeck(new PasswordCredentialProvider(url, username, password), {baseUri: url})
     }
+
+    /** Write a file to Rundeck base directory on all nodes in the cluster */
+    async writeRundeckFile(file: string, data: Buffer) {
+        return await Promise.all(
+            this.nodes.map(n => n.writeRundeckFile(file, data))
+        )
+    }
+
+    /** Write a file to all nodes in the cluster */
+    async writeFile(file: string, data: Buffer) {
+        return await Promise.all(
+            this.nodes.map(n => n.writeFile(file, data))
+        )
+    }
 }
 
 export class RundeckInstance {
@@ -32,6 +46,12 @@ export class RundeckInstance {
         const {base} = this
         const readUrl = `${base.protocol}//${base.host}/${file}`
         return await readFileUrl(URL.parse(readUrl))
+    }
+
+    async writeRundeckFile(file: string, data: Buffer) {
+        const {base} = this
+        const writeUrl = `${base.href}/${file}`
+        return await writeFileUrl(URL.parse(writeUrl), data)
     }
 
     async writeFile(file: string, data: Buffer) {
