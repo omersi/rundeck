@@ -1,5 +1,6 @@
 import {ParseBool} from 'util/parseBool'
-import { RundeckCluster } from 'RundeckCluster'
+import { RundeckCluster, RundeckInstance } from 'RundeckCluster'
+import { parse } from 'url'
 
 jest.setTimeout(60000)
 
@@ -13,5 +14,11 @@ export const envOpts = {
 
 export async function CreateCluster() {
     const cluster = new RundeckCluster(envOpts.RUNDECK_URL!, 'admin', 'admin')
+
+    cluster.nodes = [
+        new RundeckInstance(parse('docker://cluster_rundeck-1_1')),
+        new RundeckInstance(parse('docker://cluster_rundeck-2_1')),
+    ]
+
     return cluster
 }

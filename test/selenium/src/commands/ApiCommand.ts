@@ -5,6 +5,8 @@ import { Rundeck, PasswordCredentialProvider } from 'ts-rundeck';
 import { ProjectImporter } from 'projectImporter';
 import { sleep } from 'async/util';
 
+import {waitForRundeckReady} from 'util/RundeckAPI'
+
 interface Opts {
     debug: boolean
     url: string
@@ -124,18 +126,6 @@ class ApiCommand {
     }
 }
 
-async function waitForRundeckReady(client: Rundeck, timeout = 120000) {
-    const start = Date.now()
-    while (Date.now() - start < timeout) {
-        try {
-            await client.systemInfoGet()
-            return
-        } catch  (e) {
-            console.log(e)
-            await sleep(5000)
-        }
-    }
-    throw new Error('Timeout exceeded waiting for Rundeck to be ready.')
-}
+
 
 module.exports = new ApiCommand()

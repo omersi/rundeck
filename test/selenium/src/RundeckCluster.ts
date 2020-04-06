@@ -3,12 +3,8 @@ import FS from 'fs'
 
 import {promisify} from 'util'
 
-import {DockerCompose} from './DockerCompose'
-import {Readable} from 'stream'
-
 import URL from 'url'
 import { Rundeck, PasswordCredentialProvider } from 'ts-rundeck'
-import { readFile } from 'fs'
 
 const readfileAsync = promisify(FS.readFile)
 
@@ -33,8 +29,15 @@ export class RundeckInstance {
     }
 
     async readFile(file: string) {
-        const readUrl = `${this.base.protocol}://${this.base}`
-        return await readFileUrl(URL.parse(`${this.base.protocol}`))
+        const {base} = this
+        const readUrl = `${base.protocol}//${base.host}/${file}`
+        return await readFileUrl(URL.parse(readUrl))
+    }
+
+    async writeFile(file: string, data: Buffer) {
+        const {base} = this
+        const writeUrl = `${base.protocol}//${base.host}/${file}`
+        return await writeFileUrl(URL.parse(writeUrl), data)
     }
 }
 
@@ -44,6 +47,15 @@ function readFileUrl(url: URL.UrlWithStringQuery): Promise<Buffer> {
             return readDockerFile(url)
         case('file:'):
             return readLocalFile(url)
+        default:
+            throw new Error(`Unsupported protocol ${url.protocol}`)
+    }
+}
+
+function writeFileUrl(url: URL.UrlWithStringQuery, data: Buffer): Promise<void> {
+    switch(url.protocol) {
+        case('docker:'):
+            return writeDockerFile(url, data)
         default:
             throw new Error(`Unsupported protocol ${url.protocol}`)
     }
@@ -92,7 +104,7 @@ async function writeDockerFile(url: URL.UrlWithStringQuery, data: Buffer): Promi
 
         cp.on('exit', (code, sig) => {
             if (code != 0)
-                rej(new Error(`Error writing file ${url}\n\n${Buffer.concat(error).toString()}`))
+                rej(new Error(`Error writing file ${URL.format(url)}\n\n${Buffer.concat(error).toString()}`))
             else
                 res()
         })
