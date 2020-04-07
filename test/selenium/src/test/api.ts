@@ -1,8 +1,13 @@
 import {ParseBool} from 'util/parseBool'
 import { RundeckCluster, RundeckInstance } from 'RundeckCluster'
 import { parse } from 'url'
+import { TestProject, IRequiredResources } from 'TestProject'
 
 jest.setTimeout(60000)
+
+export interface ITestContext {
+    cluster: RundeckCluster
+}
 
 export const envOpts = {
     RUNDECK_URL: process.env.RUNDECK_URL || 'http://127.0.0.1:4440',
@@ -21,4 +26,15 @@ export async function CreateCluster() {
     ]
 
     return cluster
+}
+
+export function CreateTestContext(resources: IRequiredResources) {
+    let context = {cluster: null}
+
+    beforeAll( async () => {
+        context.cluster = await CreateCluster()
+        await TestProject.LoadResources(context.cluster.client, resources)
+    })
+
+    return context as ITestContext
 }

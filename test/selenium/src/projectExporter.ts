@@ -35,7 +35,7 @@ export class ProjectExporter {
         console.log('Exporting project...')
         console.log(chalk.blue(this.projectName))
 
-        const exportResp = await this.client.projectArchiveExportSync(this.projectName)
+        const exportResp = await this.client.projectArchiveExportSync(this.projectName, {exportExecutions: false})
         let projectArchive: Buffer
         if (exportResp.readableStreamBody)
             projectArchive = await readStream(exportResp.readableStreamBody)
@@ -52,54 +52,49 @@ export class ProjectExporter {
         /**
          * Public key export
          */
-        // console.log('Exporting public keys..')
-        // let keyList = [] as string[]
-        // try {
-        //     keyList = (await exec(`rd keys list --path ${this.projectName}`)).stdout.toString().split('\n').filter(line => line.length > 0)
-        // } catch (e) {
-        //     if (! e.stderr.toString().includes('404 Not Found'))
-        //         throw e
-        // }
+        const keyList = await this.client.storageKeyGetMetadata(this.projectName)
 
-        // const keys = keyList
-        //     .filter( k => !k.endsWith('/'))
-        //     .map( k => {
-        //         const kParts = k.split(' ')
-        //         const keyType = kParts[1].substr(1,kParts[1].length - 2)
-        //         return {path: kParts[0], type: keyType, value: ''}
-        //     })
-        
-        // const pubKeys = keys.filter(k => k.type == KeyType.Public)
-        // for (let key of pubKeys) {
-        //     key.value = (await exec(`rd keys get --path ${key.path}`)).stdout.toString()
-        // }
-        
-        // for (let key of pubKeys) {
-        //     console.log(chalk.blue(key.path))
-        //     const keyRelPath = key.path.split('/').slice(2).join()
-        //     const KeyRepoPath = Path.join('projects', this.projectName, 'system/keys', `${keyRelPath}.yaml`)
-        //     await MakeDirAsync(Path.dirname(KeyRepoPath))
-        //     await FS.writeFile(KeyRepoPath, YAML.dump(key))
-        // }
+        if (keyList._response.status == 200) {
+            const keys = keyList.resources!
+                .filter( k => k.meta!.rundeckKeyType == 'public')
+                .map( k => {
+                    return {path: k.path, type: k.meta!.rundeckKeyType, value: ''}
+                })
+
+            for (let key of keys) {
+                const keyPath = key.path!.split('/').slice(1).join('/')
+                const resp = await this.client.storageKeyGetMaterial(keyPath, {customHeaders: {accept: '*/*'}})
+                
+                if (resp.readableStreamBody)
+                    key.value = (await readStream(resp.readableStreamBody)).toString()
+                else
+                    throw new Error('Stream not readable')
+
+                const keyRelPath = keyPath.split('/').slice(1).join()
+                const KeyRepoPath = Path.join(projectDir, 'system/keys', `${keyRelPath}.yaml`)
+                await MakeDirAsync(Path.dirname(KeyRepoPath))
+                await FS.writeFile(KeyRepoPath, YAML.dump(key))
+            }
+        }
 
         /**
          * System ACL Export
          */
-        // console.log('Exporting ACLs...')
-        // const aclRepoPath = Path.join('projects', this.projectName, 'system/acls')
-        // await MakeDirAsync(aclRepoPath)
-        // const aclList = JSON.parse((await exec(`RD_FORMAT=json rd system acls list`)).stdout.toString()) as string[]
+        const aclRepoPath = Path.join(projectDir, 'system/acls')
+        await MakeDirAsync(aclRepoPath)
 
-        // const projectAcls = aclList.filter(a => 
-        //     a.toLowerCase().startsWith(this.projectName.toLocaleLowerCase())
-        // )
+        const acls = await this.client.systemAclPolicyList()
 
-        // for (const acl of projectAcls) {
-        //     console.log(chalk.blue(acl))
-        //     const aclRepoFile = Path.join(aclRepoPath, `${acl}.yaml`)
-        //     const aclContent = (await exec(`rd system acls get --name ${acl}`)).stdout
-        //     await FS.writeFile(aclRepoFile, aclContent)
-        // }
+        const projectAcls = acls.resources!
+            .filter( a => a.name!.toLowerCase().startsWith(this.projectName.toLowerCase()))
+
+        for (const acl of projectAcls) {
+            console.log(chalk.blue(acl.name!))
+            const aclRepoFile = Path.join(aclRepoPath, `${acl.name}.yaml`)
+            const aclResp = await this.client.systemAclPolicyGet(acl.name!)
+            const aclContent = aclResp.contents
+            await FS.writeFile(aclRepoFile, aclContent)
+        }
 
         // console.log('\n\n       Fin        ')
     }

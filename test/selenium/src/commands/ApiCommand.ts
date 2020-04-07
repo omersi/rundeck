@@ -108,9 +108,6 @@ class ApiCommand {
 
         await client.projectCreate({name: 'test'})
 
-        const importer = new ProjectImporter('./lib', 'SeleniumBasic', client)
-        await importer.importProject()
-
         const ret = await spawn('/bin/sh', ['-c', args], {
             stdio: 'inherit',
             env: {

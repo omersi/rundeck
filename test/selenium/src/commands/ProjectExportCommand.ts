@@ -28,8 +28,8 @@ class ProjectExportCommand {
             })
             .option("r", {
                 alias: "repo",
-                require: true,
                 describe: "Repo path",
+                default: './lib/projects',
                 type: 'string'
             })
             .option('u', {
