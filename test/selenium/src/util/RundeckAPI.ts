@@ -1,7 +1,10 @@
+import {ServiceClientCredentials, WebResource, RequestPolicy, RequestPolicyFactory, RequestPolicyOptions, BaseRequestPolicy} from '@azure/ms-rest-js'
 import {Rundeck} from 'ts-rundeck'
 import {Status, ExecutionStatusGetResponse, RundeckJobExecutionRunOptionalParams} from 'ts-rundeck/dist/lib/models'
+import {combineCookies} from 'ts-rundeck/dist/util'
 
 import {sleep} from 'async/util'
+import { BaseCredentialProvider } from 'ts-rundeck/dist/baseCredProvider'
 
 export async function waitForRundeckReady(client: Rundeck, timeout = 120000) {
     const start = Date.now()
@@ -45,4 +48,47 @@ export async function runJobAndWait(client: Rundeck, id: string, options?: Runde
     const resp = await client.jobExecutionRun(id, options)
 
     return await waitForExecutionComplete(client, resp.id)
+}
+
+export class CredProviderCookieEnricher extends BaseCredentialProvider {
+    constructor(readonly parent: BaseCredentialProvider, readonly cookies: string[]) {
+        super()
+    }
+
+    async signRequest(webResource: WebResource) {
+        const reqCookies = webResource.headers.get('cookie')
+        const combinedCookies = combineCookies(reqCookies, this.cookies)
+
+        webResource.headers.set('cookie', combinedCookies.join(';'))
+
+        return await this.parent.signRequest(webResource)
+    }
+
+    handleResponse(response) {
+        this.parent.handleResponse(response)
+    }
+}
+
+
+export function cookieEnrichPolicy(cookies: string[]): RequestPolicyFactory {
+    return {
+        create: (nextPolicy: RequestPolicy, options: RequestPolicyOptions) => {
+            return new CookieEnrichPolicy(nextPolicy, options, cookies)
+        }
+    }
+}
+
+export class CookieEnrichPolicy extends BaseRequestPolicy {
+    constructor(nextPolicy: RequestPolicy, options: RequestPolicyOptions, readonly cookies: string[]) {
+        super(nextPolicy, options)
+    }
+
+    async sendRequest(webResource: WebResource) {
+        const reqCookies = webResource.headers.get('cookie')
+        const combinedCookies = combineCookies(reqCookies, this.cookies)
+
+        webResource.headers.set('cookie', combinedCookies.join(';'))
+
+        return await this._nextPolicy.sendRequest(webResource)
+    }
 }

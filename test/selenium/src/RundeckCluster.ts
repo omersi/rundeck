@@ -4,7 +4,8 @@ import FS from 'fs'
 import {promisify} from 'util'
 
 import URL from 'url'
-import { Rundeck, PasswordCredentialProvider } from 'ts-rundeck'
+import { Rundeck, PasswordCredentialProvider, RundeckExtended } from 'ts-rundeck'
+import { IClusterManager } from 'ClusterManager'
 
 const readfileAsync = promisify(FS.readFile)
 
@@ -15,8 +16,11 @@ export class RundeckCluster {
 
     nodes: RundeckInstance[]
 
-    constructor(url: string, username: string, password: string) {
-        this.client = new Rundeck(new PasswordCredentialProvider(url, username, password), {baseUri: url})
+    clusterManager: IClusterManager
+
+    constructor(url: string, username: string, password: string, clusterManager: IClusterManager) {
+        this.client = new RundeckExtended(new PasswordCredentialProvider(url, username, password), {baseUri: url})
+        this.clusterManager = clusterManager
     }
 
     /** Write a file to Rundeck base directory on all nodes in the cluster */
@@ -32,10 +36,18 @@ export class RundeckCluster {
             this.nodes.map(n => n.writeFile(file, data))
         )
     }
+
+    async stopNode(node:RundeckInstance) {
+        return await this.clusterManager.stopNode(node)
+    }
+
+    async startNode(node:RundeckInstance) {
+        return await this.clusterManager.startNode(node)
+    }
 }
 
 export class RundeckInstance {
-    constructor(readonly base: URL.UrlWithStringQuery)  {}
+    constructor(readonly base: URL.UrlWithStringQuery, readonly client: Rundeck)  {}
 
     async readRundeckFile(file: string) {
         const readUrl = `${this.base.href}/${file}`

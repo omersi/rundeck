@@ -2,7 +2,9 @@ import {CreateTestContext} from 'test/api'
 
 import {readFile} from 'async/fs'
 import 'test/rundeck'
-import {runJobAndWait} from 'util/RundeckAPI'
+import {runJobAndWait, waitForRundeckReady} from 'util/RundeckAPI'
+import { sleep } from 'async/util'
+import { DockerClusterManager } from 'ClusterManager'
 
 /** Fetch context which will be initialized before the tests run */
 let context = CreateTestContext({
